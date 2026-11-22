@@ -522,10 +522,12 @@ class VeloxPlayer {
     this.videoEl.pause();
     this.audioEl.pause();
 
-    // Use velox:// protocol if available for fast 206 partial streaming
-    const streamUrl = window.velox?.getStreamUrl
-      ? window.velox.getStreamUrl(tab.path)
-      : (tab.path.startsWith('file://') ? tab.path : `file:///${tab.path.replace(/\\/g, '/')}`);
+    // Use direct file:/// URL so media is strictly same-origin with file:/// index.html.
+    // This allows MediaElementAudioSource (Equalizer, 200% Volume Boost, Visualizer) and native audio to play without CORS blocks.
+    const fileUrl = tab.path.startsWith('file://') ? tab.path : `file:///${tab.path.replace(/\\/g, '/')}`;
+    const streamUrl = fileUrl;
+
+    const currentVol = this.volumeSlider ? parseFloat(this.volumeSlider.value || 1) : 1;
 
     if (tab.type === 'video') {
       this.controlBar.classList.remove('hidden');
@@ -533,6 +535,7 @@ class VeloxPlayer {
       this.imageFilmstrip.classList.add('hidden');
 
       this.videoEl.src = streamUrl;
+      this.videoEl.volume = currentVol;
       this.videoEl.playbackRate = this.speeds[this.currentSpeedIndex];
       this.videoEl.muted = !!tab.isMuted;
 
@@ -549,6 +552,7 @@ class VeloxPlayer {
       this.audioTitle.innerText = tab.name;
 
       this.audioEl.src = streamUrl;
+      this.audioEl.volume = currentVol;
       this.audioEl.playbackRate = this.speeds[this.currentSpeedIndex];
       this.audioEl.muted = !!tab.isMuted;
 

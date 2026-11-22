@@ -96,6 +96,17 @@
       if (this.audioCtx && this.audioCtx.state === 'suspended') {
         this.audioCtx.resume().catch(() => {});
       }
+      if (typeof window !== 'undefined' && !window.__veloxAudioResumed) {
+        window.__veloxAudioResumed = true;
+        const unlock = () => {
+          if (this.audioCtx && this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume().catch(() => {});
+          }
+        };
+        window.addEventListener('click', unlock, { passive: true });
+        window.addEventListener('keydown', unlock, { passive: true });
+        window.addEventListener('pointerdown', unlock, { passive: true });
+      }
       return this.audioCtx;
     }
 

@@ -25,5 +25,5 @@ $s2.IconLocation = "$icon,0"
 $s2.Description = "VeloxTab — Ultra-Fast Multi-Tab Universal Media Player"
 $s2.Save()
 
-Write-Host "Created Desktop shortcut: $desktopPath"
-Write-Host "Created Start Menu shortcut: $startMenuPath"
+Write-Host "Updated Desktop shortcut: $desktopPath"
+Write-Host "Updated Start Menu shortcut: $startMenuPath"

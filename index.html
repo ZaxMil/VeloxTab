@@ -7,20 +7,33 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="theme-potplayer">
-  <!-- Top App Header / Tab Bar (Auto-hides in File Takeover mode) -->
+  <!-- Top App Header / Multi-Tab Bar (Auto-hides in File Takeover mode) -->
   <header id="app-header" class="app-header">
     <div class="header-left">
       <!-- Minimalist PotPlayer-style Logo / Menu Dropdown -->
       <div class="menu-dropdown-wrapper">
         <button id="btn-menu" class="btn-menu" title="VeloxTab Menu">
+          <span class="logo-icon">⚡</span>
           <span class="logo-text">VeloxTab</span>
           <span class="dropdown-arrow">▾</span>
         </button>
         <div id="dropdown-menu" class="dropdown-menu hidden">
           <div class="menu-item" id="menu-open-file">📂 Open Media File(s)... <span class="shortcut">Ctrl+O</span></div>
+          <div class="menu-item" id="menu-open-folder">📁 Open Folder... <span class="shortcut">Ctrl+Shift+O</span></div>
           <div class="menu-item" id="menu-takeover">⇲ Toggle File Takeover <span class="shortcut">Tab</span></div>
           <div class="menu-item" id="menu-new-tab">➕ New Media Tab <span class="shortcut">Ctrl+T</span></div>
           <div class="menu-item" id="menu-close-tab">✖ Close Current Tab <span class="shortcut">Ctrl+W</span></div>
+          <div class="menu-divider"></div>
+          <div class="menu-item" id="menu-eq">🎚️ 10-Band Equalizer <span class="shortcut">E</span></div>
+          <div class="menu-item" id="menu-videofx">🎨 Video Filters & FX <span class="shortcut">V</span></div>
+          <div class="menu-item" id="menu-subtitles">💬 Subtitle Controls <span class="shortcut">C</span></div>
+          <div class="menu-item" id="menu-playlist">📑 Playlist Drawer <span class="shortcut">F8</span></div>
+          <div class="menu-item" id="menu-filmstrip">🖼️ Image Filmstrip <span class="shortcut">I</span></div>
+          <div class="menu-divider"></div>
+          <div class="menu-submenu-header">Themes</div>
+          <div class="menu-item theme-option" data-theme="theme-potplayer">⚫ PotPlayer Classic Dark</div>
+          <div class="menu-item theme-option" data-theme="theme-oled">⬛ OLED Pure Black</div>
+          <div class="menu-item theme-option" data-theme="theme-midnight">🔷 Midnight Navy</div>
           <div class="menu-divider"></div>
           <div class="menu-item" id="menu-fullscreen">⛶ Fullscreen <span class="shortcut">F11 / F</span></div>
           <div class="menu-item" id="menu-fit-window">📐 Reset Zoom / Fit Window <span class="shortcut">0</span></div>
@@ -28,9 +41,32 @@
           <div class="menu-item" id="menu-about">ℹ About VeloxTab</div>
         </div>
       </div>
+
+      <!-- Quick Theme Switcher Button & Dropdown -->
+      <div class="theme-picker-wrapper">
+        <button id="btn-theme-switcher" class="header-icon-btn" title="Switch Theme (PotPlayer / OLED / Midnight)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.18 19.64 10.54 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/>
+          </svg>
+        </button>
+        <div id="theme-dropdown" class="theme-dropdown hidden">
+          <div class="theme-choice active" data-theme="theme-potplayer">
+            <span class="theme-swatch swatch-potplayer"></span>
+            <span class="theme-name">PotPlayer Classic Dark</span>
+          </div>
+          <div class="theme-choice" data-theme="theme-oled">
+            <span class="theme-swatch swatch-oled"></span>
+            <span class="theme-name">OLED Pure Black</span>
+          </div>
+          <div class="theme-choice" data-theme="theme-midnight">
+            <span class="theme-swatch swatch-midnight"></span>
+            <span class="theme-name">Midnight Navy</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Multi-Tab Bar -->
+    <!-- Multi-Tab Bar (Pinned tabs first, Audio muting icons, Pinning toggles) -->
     <div class="tab-bar-container">
       <div id="tab-list" class="tab-list">
         <!-- Tabs dynamically injected here -->
@@ -40,11 +76,31 @@
 
     <!-- Header Actions & Window Controls -->
     <div class="header-right">
+      <!-- Equalizer Quick Toggle -->
+      <button id="btn-header-eq" class="header-icon-btn" title="10-Band Equalizer (E)">
+        <span class="btn-text-badge">EQ</span>
+      </button>
+
+      <!-- Video FX Quick Toggle -->
+      <button id="btn-header-fx" class="header-icon-btn" title="Video Filters & FX (V)">
+        <span class="btn-text-badge">FX</span>
+      </button>
+
+      <!-- Playlist Drawer Quick Toggle -->
+      <button id="btn-header-playlist" class="header-icon-btn" title="Playlist Drawer (F8)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+          <path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/>
+        </svg>
+      </button>
+
+      <!-- Takeover Toggle -->
       <button id="btn-toggle-takeover" class="header-icon-btn" title="Toggle File Takeover Mode (Tab)">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
           <path d="M4 4h6v2H6v4H4V4zm16 0v6h-2V6h-4V4h6zm0 16h-6v-2h4v-4h2v6zm-16 0v-6h2v4h4v2H4z"/>
         </svg>
       </button>
+
+      <!-- Window Minimize, Maximize, Close -->
       <div class="window-controls">
         <button id="win-min" class="win-btn" title="Minimize">─</button>
         <button id="win-max" class="win-btn" title="Maximize">□</button>
@@ -53,62 +109,144 @@
     </div>
   </header>
 
-  <!-- Main Viewport Area -->
-  <main id="viewport" class="viewport">
-    <!-- Welcome / Empty State Dropzone -->
-    <div id="empty-state" class="empty-state">
-      <div class="empty-content">
-        <div class="empty-icon-glow">
-          <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5">
-            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" fill-opacity="0.15" stroke="currentColor"/>
-          </svg>
-        </div>
-        <h2>VeloxTab</h2>
-        <p class="tagline">Lightning-fast universal player with multi-tabs & file takeover</p>
-        <button id="btn-browse-empty" class="btn-primary">Open Media File(s)</button>
-        <div class="formats-hint">Supports Video (MP4, MKV, WebM, MOV), Audio (MP3, FLAC, WAV, AAC), and Images (PNG, JPG, WebP, AVIF, SVG)</div>
-      </div>
-    </div>
-
-    <!-- Media Players Containers (Active tab displays here) -->
-    <div id="media-stage" class="media-stage hidden">
-      <!-- Video Element -->
-      <video id="video-element" class="media-element hidden" playsinline></video>
-
-      <!-- Audio Element + Visualizer Canvas -->
-      <div id="audio-container" class="audio-container hidden">
-        <audio id="audio-element"></audio>
-        <div class="audio-card">
-          <div class="audio-artwork">
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+  <!-- Workspace Container: Main Viewport + Slide-out Playlist Drawer -->
+  <div id="app-workspace" class="app-workspace">
+    <!-- Main Viewport Area -->
+    <main id="viewport" class="viewport">
+      <!-- Welcome / Empty State Dropzone -->
+      <div id="empty-state" class="empty-state">
+        <div class="empty-content">
+          <div class="empty-icon-glow">
+            <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" fill-opacity="0.15" stroke="currentColor"/>
             </svg>
           </div>
-          <div class="audio-info">
-            <div id="audio-title" class="audio-title">Audio Track</div>
-            <div id="audio-meta" class="audio-meta">Playing high-fidelity audio stream</div>
+          <h2>VeloxTab</h2>
+          <p class="tagline">Ultra-fast multi-tab universal media player with PotPlayer dark aesthetic</p>
+          <div class="empty-btn-row">
+            <button id="btn-browse-empty" class="btn-primary">Open Media File(s)</button>
+            <button id="btn-browse-folder" class="btn-secondary">Open Folder</button>
           </div>
+          <div class="formats-hint">Supports 4K/8K MKV, MP4, WebM, FLAC, MP3, WAV, WebP, AVIF, PNG, SVG with instant scrubbing</div>
         </div>
-        <canvas id="visualizer-canvas" class="visualizer-canvas"></canvas>
       </div>
 
-      <!-- Image Viewer Container -->
-      <div id="image-container" class="image-container hidden">
-        <img id="image-element" class="image-element" alt="Media" draggable="false" />
-        <div class="image-floating-info">
-          <span id="image-zoom-level">100%</span>
-          <button id="btn-rotate-img" title="Rotate (R)">↻</button>
-          <button id="btn-reset-img" title="Reset Zoom (0)">1:1</button>
+      <!-- Media Players Containers (Active tab displays here) -->
+      <div id="media-stage" class="media-stage hidden">
+        <!-- Video Element -->
+        <video id="video-element" class="media-element hidden" playsinline></video>
+
+        <!-- Custom High-Resolution Subtitle Overlay -->
+        <div id="subtitle-overlay" class="subtitle-overlay hidden"></div>
+
+        <!-- Audio Element + Visualizer Canvas -->
+        <div id="audio-container" class="audio-container hidden">
+          <audio id="audio-element"></audio>
+          <div class="audio-card">
+            <div class="audio-artwork">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+              </svg>
+            </div>
+            <div class="audio-info">
+              <div id="audio-title" class="audio-title">Audio Track</div>
+              <div id="audio-meta" class="audio-meta">Playing high-fidelity audio stream with 10-band DSP</div>
+            </div>
+          </div>
+          <canvas id="visualizer-canvas" class="visualizer-canvas"></canvas>
+        </div>
+
+        <!-- Image Viewer Container -->
+        <div id="image-container" class="image-container hidden">
+          <img id="image-element" class="image-element" alt="Media" draggable="false" />
+          <div class="image-floating-info">
+            <span id="image-zoom-level">100%</span>
+            <button id="btn-rotate-img" title="Rotate (R)">↻</button>
+            <button id="btn-reset-img" title="Reset Zoom (0)">1:1</button>
+            <button id="btn-toggle-filmstrip" title="Toggle Image Filmstrip (I)">🖼️ Filmstrip</button>
+          </div>
         </div>
       </div>
-    </div>
-  </main>
+
+      <!-- Filmstrip Thumbnail Bar for Browsing Images in Same Folder -->
+      <div id="image-filmstrip" class="image-filmstrip hidden">
+        <div class="filmstrip-header">
+          <div class="filmstrip-title-row">
+            <span class="filmstrip-icon">🖼️</span>
+            <span class="filmstrip-title">Folder Images</span>
+            <span id="filmstrip-count" class="filmstrip-badge">0 / 0</span>
+          </div>
+          <div class="filmstrip-actions">
+            <button id="btn-filmstrip-prev" class="filmstrip-nav-btn" title="Previous Image (Left Arrow)">◀</button>
+            <button id="btn-filmstrip-next" class="filmstrip-nav-btn" title="Next Image (Right Arrow)">▶</button>
+            <button id="btn-filmstrip-close" class="filmstrip-close-btn" title="Close Filmstrip (I)">✕</button>
+          </div>
+        </div>
+        <div id="filmstrip-thumbnails" class="filmstrip-thumbnails">
+          <!-- Thumbnails injected dynamically -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Slide-out Right Playlist Drawer (dockable/collapsible) -->
+    <aside id="playlist-drawer" class="playlist-drawer collapsed">
+      <div class="playlist-header">
+        <div class="playlist-title-wrap">
+          <span class="playlist-icon">📑</span>
+          <span class="playlist-title">Playlist</span>
+          <span id="playlist-badge" class="playlist-badge">0</span>
+        </div>
+        <div class="playlist-header-actions">
+          <button id="btn-playlist-dock" class="drawer-btn" title="Toggle Dock / Float Mode">⇲</button>
+          <button id="btn-playlist-close" class="drawer-btn close" title="Close Playlist (F8)">✕</button>
+        </div>
+      </div>
+
+      <!-- Playlist Toolbar: Search, Shuffle, Repeat, Add, Clear -->
+      <div class="playlist-toolbar">
+        <div class="playlist-search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="playlist-search" class="playlist-search" placeholder="Search playlist..." />
+          <button id="btn-playlist-search-clear" class="btn-clear-search hidden" title="Clear Search">✕</button>
+        </div>
+        <div class="playlist-tools-row">
+          <button id="btn-playlist-shuffle" class="playlist-tool-btn" title="Shuffle Playlist">
+            🔀
+          </button>
+          <button id="btn-playlist-repeat" class="playlist-tool-btn" title="Repeat Mode: Off / All / One" data-mode="off">
+            🔁
+          </button>
+          <button id="btn-playlist-add" class="playlist-tool-btn" title="Add Media Files">
+            ➕
+          </button>
+          <button id="btn-playlist-clear" class="playlist-tool-btn danger" title="Clear Playlist">
+            🗑️
+          </button>
+        </div>
+      </div>
+
+      <!-- Playlist Items List -->
+      <div id="playlist-items" class="playlist-items">
+        <div class="playlist-empty-state">
+          <span>Playlist is empty.</span>
+          <span class="subtext">Drag & drop files here or click ➕</span>
+        </div>
+      </div>
+
+      <!-- Playlist Footer Status -->
+      <div class="playlist-footer">
+        <span id="playlist-total-duration">Total: 00:00:00</span>
+        <span id="playlist-status-text">0 items</span>
+      </div>
+    </aside>
+  </div>
 
   <!-- Floating PotPlayer-Style Bottom Control Bar (For Video and Audio) -->
   <footer id="control-bar" class="control-bar">
-    <!-- Seekbar with Hover Tooltip -->
+    <!-- Seekbar with Hover Tooltip & A-B Loop Segment Highlights -->
     <div class="seekbar-wrapper">
       <div id="seekbar-track" class="seekbar-track">
+        <div id="seekbar-ab-marker" class="seekbar-ab-marker hidden"></div>
         <div id="seekbar-buffered" class="seekbar-buffered"></div>
         <div id="seekbar-progress" class="seekbar-progress"></div>
         <div id="seekbar-thumb" class="seekbar-thumb"></div>
@@ -134,13 +272,13 @@
             <rect x="6" y="6" width="12" height="12"/>
           </svg>
         </button>
-        <button id="btn-prev" class="ctrl-btn" title="Previous Tab (Ctrl+Left)">
+        <button id="btn-prev" class="ctrl-btn" title="Previous Item / Tab (Ctrl+Left)">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
             <polygon points="6 6 6 18 8 18 8 6"/>
             <polygon points="18 6 10 12 18 18 18 6"/>
           </svg>
         </button>
-        <button id="btn-next" class="ctrl-btn" title="Next Tab (Ctrl+Right)">
+        <button id="btn-next" class="ctrl-btn" title="Next Item / Tab (Ctrl+Right)">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
             <polygon points="6 6 14 12 6 18 6 6"/>
             <polygon points="16 6 16 18 18 18 18 6"/>
@@ -153,7 +291,7 @@
         </div>
       </div>
 
-      <!-- Right Controls: Volume, Speed, Fullscreen, Takeover -->
+      <!-- Right Controls: Volume, Speed, Subtitles, EQ, VideoFX, Playlist, Fullscreen, Takeover -->
       <div class="controls-right">
         <!-- Volume group -->
         <div class="volume-group">
@@ -170,6 +308,22 @@
 
         <!-- Playback Rate Selector -->
         <button id="btn-speed" class="ctrl-btn text-btn" title="Playback Speed">1.0x</button>
+
+        <!-- Subtitle Toggle & Popover Button -->
+        <button id="btn-subtitles-toggle" class="ctrl-btn text-btn" title="Subtitle Controls (C)">CC</button>
+
+        <!-- Equalizer Modal Toggle Button -->
+        <button id="btn-eq-toggle" class="ctrl-btn text-btn" title="10-Band Equalizer (E)">EQ</button>
+
+        <!-- Video FX Modal Toggle Button -->
+        <button id="btn-fx-toggle" class="ctrl-btn text-btn" title="Video Filters & Color (V)">FX</button>
+
+        <!-- Playlist Drawer Toggle Button -->
+        <button id="btn-playlist-toggle" class="ctrl-btn" title="Toggle Playlist Drawer (F8)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+            <path d="M4 10h12v2H4zm0-4h12v2H4zm0 8h8v2H4zm10 0v6l5-3z"/>
+          </svg>
+        </button>
 
         <!-- Loop Toggle -->
         <button id="btn-loop" class="ctrl-btn" title="Toggle Loop Repeat">
@@ -202,6 +356,220 @@
     </div>
   </footer>
 
+  <!-- =========================================================================
+       MODALS & FLOATING DRAWERS
+       ========================================================================= -->
+
+  <!-- 1. 10-Band Equalizer Modal / Drawer -->
+  <div id="equalizer-modal" class="modal-overlay hidden">
+    <div class="modal-panel eq-panel">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">🎚️</span>
+          <h3>10-Band Graphic Equalizer</h3>
+        </div>
+        <div class="modal-header-controls">
+          <label class="toggle-switch-container" title="Enable / Disable Equalizer">
+            <input type="checkbox" id="eq-enable-toggle" checked />
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">EQ On</span>
+          </label>
+          <button id="btn-eq-close" class="modal-close-btn" title="Close (E)">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- Top Toolbar: Preset selector, reset, volume boost -->
+        <div class="eq-top-toolbar">
+          <div class="eq-preset-group">
+            <label for="eq-preset-select">Preset:</label>
+            <select id="eq-preset-select" class="dropdown-select">
+              <option value="Flat">Flat</option>
+              <option value="Rock">Rock</option>
+              <option value="Pop">Pop</option>
+              <option value="Bass Boost">Bass Boost</option>
+              <option value="Treble Boost">Treble Boost</option>
+              <option value="Vocal/Dialogue">Vocal / Dialogue</option>
+              <option value="Cinema">Cinema</option>
+              <option value="Classical">Classical</option>
+              <option value="Custom">Custom</option>
+            </select>
+          </div>
+          <button id="btn-eq-reset" class="btn-subtle" title="Reset all bands to 0 dB">Flat Reset</button>
+          <div class="eq-boost-group">
+            <label for="eq-boost-slider">Volume Boost (200% Limiter):</label>
+            <input type="range" id="eq-boost-slider" min="100" max="200" step="5" value="100" />
+            <span id="eq-boost-val" class="eq-val-badge">100%</span>
+          </div>
+        </div>
+
+        <!-- 10 Vertical Sliders Row -->
+        <div class="eq-sliders-wrapper">
+          <div class="eq-db-scale">
+            <span>+12dB</span>
+            <span>+6dB</span>
+            <span>0dB</span>
+            <span>-6dB</span>
+            <span>-12dB</span>
+          </div>
+          <div id="eq-sliders-container" class="eq-sliders-container">
+            <!-- 10 frequency sliders injected here -->
+          </div>
+        </div>
+
+        <!-- Bottom Pan / Balance control -->
+        <div class="eq-bottom-toolbar">
+          <div class="eq-pan-group">
+            <label for="eq-pan-slider">Stereo Balance / Pan:</label>
+            <span class="pan-end">L</span>
+            <input type="range" id="eq-pan-slider" min="-1" max="1" step="0.05" value="0" />
+            <span class="pan-end">R</span>
+            <span id="eq-pan-val" class="eq-val-badge">Center</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Video Filters & Color Adjustments Modal / Drawer -->
+  <div id="videofx-modal" class="modal-overlay hidden">
+    <div class="modal-panel fx-panel">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">🎨</span>
+          <h3>Video Filters & Enhancements</h3>
+        </div>
+        <div class="modal-header-controls">
+          <button id="btn-fx-reset" class="btn-subtle" title="Reset all filters to default">Reset All</button>
+          <button id="btn-fx-close" class="modal-close-btn" title="Close (V)">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body fx-body">
+        <!-- Sliders: Brightness, Contrast, Saturation, Hue, Sharpen -->
+        <div class="fx-section">
+          <h4>Color & Tone</h4>
+          <div class="fx-grid">
+            <div class="fx-row">
+              <label for="fx-brightness">Brightness</label>
+              <input type="range" id="fx-brightness" min="-100" max="100" step="1" value="0" />
+              <span id="fx-brightness-val" class="fx-val">0%</span>
+            </div>
+            <div class="fx-row">
+              <label for="fx-contrast">Contrast</label>
+              <input type="range" id="fx-contrast" min="-100" max="100" step="1" value="0" />
+              <span id="fx-contrast-val" class="fx-val">0%</span>
+            </div>
+            <div class="fx-row">
+              <label for="fx-saturation">Saturation</label>
+              <input type="range" id="fx-saturation" min="0" max="200" step="1" value="100" />
+              <span id="fx-saturation-val" class="fx-val">100%</span>
+            </div>
+            <div class="fx-row">
+              <label for="fx-hue">Hue Rotate</label>
+              <input type="range" id="fx-hue" min="0" max="360" step="1" value="0" />
+              <span id="fx-hue-val" class="fx-val">0°</span>
+            </div>
+          </div>
+          <div class="fx-row-toggle">
+            <label class="toggle-switch-container">
+              <input type="checkbox" id="fx-sharpen" />
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Hardware Sharpen Filter</span>
+            </label>
+            <div class="fx-preset-chips">
+              <button class="chip-btn" data-preset="Default">Default</button>
+              <button class="chip-btn" data-preset="Vivid">Vivid</button>
+              <button class="chip-btn" data-preset="Cinema">Cinema</button>
+              <button class="chip-btn" data-preset="Night Mode">Night</button>
+              <button class="chip-btn" data-preset="B&W">B&W</button>
+              <button class="chip-btn" data-preset="High Contrast">Hi-Con</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aspect Ratio Selection -->
+        <div class="fx-section">
+          <h4>Aspect Ratio</h4>
+          <div id="aspect-ratio-group" class="aspect-ratio-group">
+            <button class="aspect-btn active" data-aspect="auto">Auto</button>
+            <button class="aspect-btn" data-aspect="16:9">16:9</button>
+            <button class="aspect-btn" data-aspect="4:3">4:3</button>
+            <button class="aspect-btn" data-aspect="21:9">21:9</button>
+            <button class="aspect-btn" data-aspect="fill">Fill Screen</button>
+            <button class="aspect-btn" data-aspect="fit">Fit Window</button>
+          </div>
+        </div>
+
+        <!-- A-B Repeat Loop & Frame Stepping -->
+        <div class="fx-section">
+          <h4>A-B Repeat Loop & Precision Frame Stepping</h4>
+          <div class="ab-repeat-row">
+            <button id="btn-ab-a" class="btn-subtle" title="Set Point A">Set Point [A]</button>
+            <span id="ab-val-a" class="ab-tag">--:--:--</span>
+            <button id="btn-ab-b" class="btn-subtle" title="Set Point B">Set Point [B]</button>
+            <span id="ab-val-b" class="ab-tag">--:--:--</span>
+            <button id="btn-ab-clear" class="btn-subtle danger" title="Clear A-B Repeat Loop">Clear Loop</button>
+          </div>
+          <div class="frame-step-row">
+            <span class="step-label">Frame Step:</span>
+            <button id="btn-frame-prev" class="btn-subtle" title="Step Back 1 Frame (,)">◀ 1 Frame (,)</button>
+            <button id="btn-frame-next" class="btn-subtle" title="Step Forward 1 Frame (.)">1 Frame (.) ▶</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Subtitle Controls Popover / Drawer -->
+  <div id="subtitles-popover" class="popover-panel hidden">
+    <div class="popover-header">
+      <div class="popover-title-wrap">
+        <span class="popover-icon">💬</span>
+        <span class="popover-title">Subtitles & Timing</span>
+      </div>
+      <button id="btn-subtitles-close" class="popover-close-btn" title="Close (C)">✕</button>
+    </div>
+    <div class="popover-body">
+      <!-- Track Selector -->
+      <div class="popover-field">
+        <label for="sub-track-select">Subtitle Track:</label>
+        <select id="sub-track-select" class="dropdown-select">
+          <option value="none">Disabled / Off</option>
+          <option value="load">📂 Load Subtitle File (.srt, .vtt)...</option>
+        </select>
+      </div>
+
+      <!-- Offset Adjuster Controls -->
+      <div class="popover-field">
+        <div class="sub-offset-header">
+          <span>Timing Sync Offset:</span>
+          <span id="sub-offset-display" class="sub-offset-badge">0 ms</span>
+        </div>
+        <div class="sub-offset-btns">
+          <button id="btn-sub-advance" class="btn-subtle" title="Advance subtitle 50ms earlier ([)">-50ms ([)</button>
+          <button id="btn-sub-reset" class="btn-subtle" title="Reset offset to 0ms">0ms</button>
+          <button id="btn-sub-delay" class="btn-subtle" title="Delay subtitle 50ms later (])">+50ms (])</button>
+        </div>
+      </div>
+
+      <!-- Appearance: Font Size -->
+      <div class="popover-field">
+        <label for="sub-size-select">Font Size:</label>
+        <select id="sub-size-select" class="dropdown-select">
+          <option value="18px">Small (18px)</option>
+          <option value="24px" selected>Medium (24px)</option>
+          <option value="32px">Large (32px)</option>
+          <option value="42px">Extra Large (42px)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- External Script Dependencies & App Logic -->
+  <script src="audio-dsp.js"></script>
+  <script src="subtitles.js"></script>
+  <script src="video-fx.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>

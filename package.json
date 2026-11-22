@@ -22,6 +22,7 @@
   "author": "ZAX Mil <https://github.com/ZaxMil>",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^45.4.1"
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
   }
 }

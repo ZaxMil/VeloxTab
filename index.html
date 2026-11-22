@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeloxTab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-potplayer">
+  <!-- Top App Header / Tab Bar (Auto-hides in File Takeover mode) -->
+  <header id="app-header" class="app-header">
+    <div class="header-left">
+      <!-- Minimalist PotPlayer-style Logo / Menu Dropdown -->
+      <div class="menu-dropdown-wrapper">
+        <button id="btn-menu" class="btn-menu" title="VeloxTab Menu">
+          <span class="logo-text">VeloxTab</span>
+          <span class="dropdown-arrow">▾</span>
+        </button>
+        <div id="dropdown-menu" class="dropdown-menu hidden">
+          <div class="menu-item" id="menu-open-file">📂 Open Media File(s)... <span class="shortcut">Ctrl+O</span></div>
+          <div class="menu-item" id="menu-takeover">⇲ Toggle File Takeover <span class="shortcut">Tab</span></div>
+          <div class="menu-item" id="menu-new-tab">➕ New Media Tab <span class="shortcut">Ctrl+T</span></div>
+          <div class="menu-item" id="menu-close-tab">✖ Close Current Tab <span class="shortcut">Ctrl+W</span></div>
+          <div class="menu-divider"></div>
+          <div class="menu-item" id="menu-fullscreen">⛶ Fullscreen <span class="shortcut">F11 / F</span></div>
+          <div class="menu-item" id="menu-fit-window">📐 Reset Zoom / Fit Window <span class="shortcut">0</span></div>
+          <div class="menu-divider"></div>
+          <div class="menu-item" id="menu-about">ℹ About VeloxTab</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Multi-Tab Bar -->
+    <div class="tab-bar-container">
+      <div id="tab-list" class="tab-list">
+        <!-- Tabs dynamically injected here -->
+      </div>
+      <button id="btn-add-tab" class="btn-add-tab" title="Open File in New Tab (Ctrl+T)">＋</button>
+    </div>
+
+    <!-- Header Actions & Window Controls -->
+    <div class="header-right">
+      <button id="btn-toggle-takeover" class="header-icon-btn" title="Toggle File Takeover Mode (Tab)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+          <path d="M4 4h6v2H6v4H4V4zm16 0v6h-2V6h-4V4h6zm0 16h-6v-2h4v-4h2v6zm-16 0v-6h2v4h4v2H4z"/>
+        </svg>
+      </button>
+      <div class="window-controls">
+        <button id="win-min" class="win-btn" title="Minimize">─</button>
+        <button id="win-max" class="win-btn" title="Maximize">□</button>
+        <button id="win-close" class="win-btn close" title="Close">✕</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Viewport Area -->
+  <main id="viewport" class="viewport">
+    <!-- Welcome / Empty State Dropzone -->
+    <div id="empty-state" class="empty-state">
+      <div class="empty-content">
+        <div class="empty-icon-glow">
+          <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" fill-opacity="0.15" stroke="currentColor"/>
+          </svg>
+        </div>
+        <h2>VeloxTab</h2>
+        <p class="tagline">Lightning-fast universal player with multi-tabs & file takeover</p>
+        <button id="btn-browse-empty" class="btn-primary">Open Media File(s)</button>
+        <div class="formats-hint">Supports Video (MP4, MKV, WebM, MOV), Audio (MP3, FLAC, WAV, AAC), and Images (PNG, JPG, WebP, AVIF, SVG)</div>
+      </div>
+    </div>
+
+    <!-- Media Players Containers (Active tab displays here) -->
+    <div id="media-stage" class="media-stage hidden">
+      <!-- Video Element -->
+      <video id="video-element" class="media-element hidden" playsinline></video>
+
+      <!-- Audio Element + Visualizer Canvas -->
+      <div id="audio-container" class="audio-container hidden">
+        <audio id="audio-element"></audio>
+        <div class="audio-card">
+          <div class="audio-artwork">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+          </div>
+          <div class="audio-info">
+            <div id="audio-title" class="audio-title">Audio Track</div>
+            <div id="audio-meta" class="audio-meta">Playing high-fidelity audio stream</div>
+          </div>
+        </div>
+        <canvas id="visualizer-canvas" class="visualizer-canvas"></canvas>
+      </div>
+
+      <!-- Image Viewer Container -->
+      <div id="image-container" class="image-container hidden">
+        <img id="image-element" class="image-element" alt="Media" draggable="false" />
+        <div class="image-floating-info">
+          <span id="image-zoom-level">100%</span>
+          <button id="btn-rotate-img" title="Rotate (R)">↻</button>
+          <button id="btn-reset-img" title="Reset Zoom (0)">1:1</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Floating PotPlayer-Style Bottom Control Bar (For Video and Audio) -->
+  <footer id="control-bar" class="control-bar">
+    <!-- Seekbar with Hover Tooltip -->
+    <div class="seekbar-wrapper">
+      <div id="seekbar-track" class="seekbar-track">
+        <div id="seekbar-buffered" class="seekbar-buffered"></div>
+        <div id="seekbar-progress" class="seekbar-progress"></div>
+        <div id="seekbar-thumb" class="seekbar-thumb"></div>
+      </div>
+      <div id="seekbar-tooltip" class="seekbar-tooltip hidden">00:00:00</div>
+    </div>
+
+    <!-- Bottom Controls Row -->
+    <div class="controls-row">
+      <!-- Left Controls: Playback buttons & Time -->
+      <div class="controls-left">
+        <button id="btn-play-pause" class="ctrl-btn main-play" title="Play/Pause (Space)">
+          <svg id="icon-play" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          <svg id="icon-pause" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" class="hidden">
+            <rect x="6" y="4" width="4" height="16"/>
+            <rect x="14" y="4" width="4" height="16"/>
+          </svg>
+        </button>
+        <button id="btn-stop" class="ctrl-btn" title="Stop">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <rect x="6" y="6" width="12" height="12"/>
+          </svg>
+        </button>
+        <button id="btn-prev" class="ctrl-btn" title="Previous Tab (Ctrl+Left)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <polygon points="6 6 6 18 8 18 8 6"/>
+            <polygon points="18 6 10 12 18 18 18 6"/>
+          </svg>
+        </button>
+        <button id="btn-next" class="ctrl-btn" title="Next Tab (Ctrl+Right)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <polygon points="6 6 14 12 6 18 6 6"/>
+            <polygon points="16 6 16 18 18 18 18 6"/>
+          </svg>
+        </button>
+        <div class="time-display">
+          <span id="time-current">00:00:00</span>
+          <span class="time-sep">/</span>
+          <span id="time-duration">00:00:00</span>
+        </div>
+      </div>
+
+      <!-- Right Controls: Volume, Speed, Fullscreen, Takeover -->
+      <div class="controls-right">
+        <!-- Volume group -->
+        <div class="volume-group">
+          <button id="btn-mute" class="ctrl-btn" title="Mute/Unmute (M)">
+            <svg id="icon-volume" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+            <svg id="icon-volume-muted" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="hidden">
+              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+            </svg>
+          </button>
+          <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.02" value="1" title="Volume">
+        </div>
+
+        <!-- Playback Rate Selector -->
+        <button id="btn-speed" class="ctrl-btn text-btn" title="Playback Speed">1.0x</button>
+
+        <!-- Loop Toggle -->
+        <button id="btn-loop" class="ctrl-btn" title="Toggle Loop Repeat">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+            <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+          </svg>
+        </button>
+
+        <!-- Picture-in-Picture -->
+        <button id="btn-pip" class="ctrl-btn" title="Picture in Picture">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+            <path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/>
+          </svg>
+        </button>
+
+        <!-- File Takeover Toggle -->
+        <button id="btn-takeover-bottom" class="ctrl-btn" title="File Takeover Mode (Tab)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+          </svg>
+        </button>
+
+        <!-- Fullscreen -->
+        <button id="btn-fullscreen" class="ctrl-btn" title="Fullscreen (F / F11)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

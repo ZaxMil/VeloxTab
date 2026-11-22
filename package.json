@@ -1,0 +1,26 @@
+{
+  "name": "veloxtab",
+  "version": "1.0.0",
+  "description": "⚡ Ultra-fast, minimal multi-tab universal media player with PotPlayer dark frameless aesthetic & file takeover mode.",
+  "main": "main.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "keywords": [
+    "media-player",
+    "video-player",
+    "audio-player",
+    "image-viewer",
+    "multi-tab",
+    "potplayer",
+    "vlc",
+    "electron"
+  ],
+  "author": "ZAX Mil <https://github.com/ZaxMil>",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^45.4.1"
+  }
+}

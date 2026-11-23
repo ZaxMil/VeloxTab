@@ -29,6 +29,10 @@ protocol.registerSchemesAsPrivileged([
 app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-zero-copy');
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('ignore-certificate-errors');
+app.commandLine.appendSwitch('disable-web-security');
+app.commandLine.appendSwitch('allow-running-insecure-content');
+app.commandLine.appendSwitch('user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder,PlatformHEVCDecoderSupport');
 
 // MIME types for 4K/8K MKV, MP4, WebM, audio, and image formats
@@ -350,8 +354,18 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-      webSecurity: false // Allow loading local media files directly
+      webSecurity: false, // Allow loading local media files and cross-origin streams directly
+      allowRunningInsecureContent: true
     }
+  });
+
+  // Enable CORS header bypass for IPTV / HLS live stream requests
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = { ...details.responseHeaders };
+    responseHeaders['Access-Control-Allow-Origin'] = ['*'];
+    responseHeaders['Access-Control-Allow-Methods'] = ['GET, HEAD, OPTIONS'];
+    responseHeaders['Access-Control-Allow-Headers'] = ['*'];
+    callback({ responseHeaders });
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));

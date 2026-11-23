@@ -556,29 +556,47 @@ class VeloxPlayer {
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: true,
-          backBufferLength: 90
+          backBufferLength: 60,
+          manifestLoadingTimeOut: 10000,
+          manifestLoadingMaxRetry: 3,
+          levelLoadingTimeOut: 10000,
+          levelLoadingMaxRetry: 3,
+          fragLoadingTimeOut: 15000,
+          fragLoadingMaxRetry: 4
         });
         this.hlsInstance = hls;
         hls.loadSource(streamUrl);
         hls.attachMedia(this.videoEl);
+
+        let retryCount = 0;
+        const maxRetries = 3;
+
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          retryCount = 0;
           this.videoEl.play().catch(() => {});
           if (window.showVeloxOSD) window.showVeloxOSD(`Playing Live Stream: ${tab.name}`);
         });
+
         hls.on(Hls.Events.ERROR, (_event, data) => {
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                if (window.showVeloxOSD) window.showVeloxOSD('Network reconnecting...');
-                hls.startLoad();
+                retryCount++;
+                if (retryCount <= maxRetries) {
+                  if (window.showVeloxOSD) window.showVeloxOSD(`Connecting (${retryCount}/${maxRetries})...`);
+                  setTimeout(() => hls.startLoad(), 1000);
+                } else {
+                  if (window.showVeloxOSD) window.showVeloxOSD('Stream offline or unavailable');
+                  hls.destroy();
+                }
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                if (window.showVeloxOSD) window.showVeloxOSD('Media buffer recovery...');
+                if (window.showVeloxOSD) window.showVeloxOSD('Buffering stream...');
                 hls.recoverMediaError();
                 break;
               default:
                 hls.destroy();
-                // Fallback to direct HTML5 video src
+                // Try fallback to native HTML5 video stream
                 this.videoEl.src = streamUrl;
                 this.videoEl.play().catch(() => {});
                 break;
@@ -1819,10 +1837,13 @@ class VeloxPlayer {
             const groupMatch = line.match(/group-title="([^"]+)"/i);
             curGroup = groupMatch ? groupMatch[1].trim() : '';
           } else if (line.startsWith('http://') || line.startsWith('https://')) {
-            if (curName) {
+            const cleanUrl = line.replace(/[\r\n\t]/g, '').trim();
+            // Filter out known geo-blocked tags or invalid extensions
+            const isGeoBlocked = curName.toLowerCase().includes('geo-blocked') || curName.toLowerCase().includes('not 24/7');
+            if (curName && !isGeoBlocked && (cleanUrl.includes('.m3u8') || cleanUrl.includes('.m3u') || cleanUrl.includes('/live/') || cleanUrl.includes('/hls/'))) {
               currentChannels.push({
                 name: curName,
-                url: line,
+                url: cleanUrl,
                 group: curGroup
               });
               curName = '';

@@ -76,6 +76,11 @@
 
     <!-- Header Actions & Window Controls -->
     <div class="header-right">
+      <!-- IPTV Live Channels Quick Toggle -->
+      <button id="btn-header-iptv" class="header-icon-btn" title="IPTV Live Streaming (I)">
+        <span class="btn-text-badge iptv-badge">IPTV</span>
+      </button>
+
       <!-- Equalizer Quick Toggle -->
       <button id="btn-header-eq" class="header-icon-btn" title="10-Band Equalizer (E)">
         <span class="btn-text-badge">EQ</span>
@@ -126,6 +131,7 @@
           <div class="empty-btn-row">
             <button id="btn-browse-empty" class="btn-primary">Open Media File(s)</button>
             <button id="btn-browse-folder" class="btn-secondary">Open Folder</button>
+            <button id="btn-empty-iptv" class="btn-primary" style="background:#10b981;">📺 Watch IPTV</button>
           </div>
           <div class="formats-hint">Supports 4K/8K MKV, MP4, WebM, FLAC, MP3, WAV, WebP, AVIF, PNG, SVG with instant scrubbing</div>
         </div>
@@ -566,7 +572,68 @@
     </div>
   </div>
 
+  <!-- IPTV Channels & Stream Browser Modal -->
+  <div id="iptv-modal" class="audio-fx-modal hidden">
+    <div class="popover-header">
+      <div class="popover-title">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
+        </svg>
+        <span>IPTV Live Channels (iptv-org)</span>
+      </div>
+      <button id="btn-iptv-close" class="popover-close-btn" title="Close">✕</button>
+    </div>
+    <div class="popover-body" style="padding: 12px; gap: 10px;">
+      <!-- Direct Stream URL input -->
+      <div class="popover-field" style="display:flex; gap:6px;">
+        <input type="text" id="iptv-url-input" class="dropdown-select" placeholder="Enter .m3u8, .m3u or stream URL..." style="flex:1; cursor:text; padding:6px 10px;">
+        <button id="btn-iptv-play-url" class="btn-primary" style="padding:6px 14px; font-size:12px;">Play</button>
+      </div>
+
+      <!-- Quick Preset Feeds from iptv-org -->
+      <div class="popover-field">
+        <label for="iptv-preset-select">Curated Playlists (iptv-org):</label>
+        <div style="display:flex; gap:6px;">
+          <select id="iptv-preset-select" class="dropdown-select" style="flex:1;">
+            <option value="https://iptv-org.github.io/iptv/index.m3u">🌍 Global Channels (Main Index)</option>
+            <option value="https://iptv-org.github.io/iptv/categories/news.m3u">📰 News Channels</option>
+            <option value="https://iptv-org.github.io/iptv/categories/sports.m3u">⚽ Sports Channels</option>
+            <option value="https://iptv-org.github.io/iptv/categories/music.m3u">🎵 Music Channels</option>
+            <option value="https://iptv-org.github.io/iptv/categories/movies.m3u">🎬 Movies Channels</option>
+            <option value="https://iptv-org.github.io/iptv/categories/animation.m3u">🎨 Animation & Kids</option>
+            <option value="https://iptv-org.github.io/iptv/categories/documentary.m3u">🌿 Documentaries</option>
+            <option value="https://iptv-org.github.io/iptv/languages/eng.m3u">🇺🇸 English Channels</option>
+          </select>
+          <button id="btn-iptv-load-preset" class="btn-secondary" style="padding:6px 12px; font-size:12px;">Load List</button>
+        </div>
+      </div>
+
+      <!-- Filter / Search Channels -->
+      <div class="popover-field" style="display:flex; justify-content:space-between; align-items:center;">
+        <input type="text" id="iptv-search-input" class="dropdown-select" placeholder="🔍 Filter channels..." style="width:100%; cursor:text; padding:5px 8px; font-size:12px;">
+      </div>
+
+      <!-- Channel List Container -->
+      <div id="iptv-channel-list" style="
+        max-height: 240px;
+        overflow-y: auto;
+        border: 1px solid var(--border-subtle);
+        border-radius: 4px;
+        background: var(--bg-panel);
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        padding: 4px;
+      ">
+        <div id="iptv-status-msg" style="padding: 18px; text-align: center; color: var(--text-muted); font-size: 12px;">
+          Click "Load List" or enter a stream URL above to browse channels.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- External Script Dependencies & App Logic -->
+  <script src="hls.min.js"></script>
   <script src="audio-dsp.js"></script>
   <script src="subtitles.js"></script>
   <script src="video-fx.js"></script>

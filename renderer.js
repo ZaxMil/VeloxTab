@@ -191,6 +191,7 @@ class VeloxPlayer {
     this.bindVideoFXControls();
     this.bindSubtitleControls();
     this.bindFilmstripControls();
+    this.bindIptvControls();
     this.bindDragAndDrop();
     this.bindShortcuts();
     this.bindInactivityHandlers();
@@ -379,8 +380,8 @@ class VeloxPlayer {
   // ==========================================================================
 
   addTab(filePath, options = {}) {
-    const fileName = filePath.replace(/^.*[\\\/]/, '');
-    const mediaType = this.detectMediaType(filePath);
+    const fileName = options.title || (filePath.startsWith('http') ? filePath.split('/').pop().split('?')[0] || 'Live Stream' : filePath.replace(/^.*[\\\/]/, ''));
+    const mediaType = options.type || this.detectMediaType(filePath);
     const tabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
 
     const newTab = {
@@ -388,6 +389,7 @@ class VeloxPlayer {
       name: fileName,
       path: filePath,
       type: mediaType,
+      isLive: !!options.isLive || filePath.startsWith('http'),
       currentTime: 0,
       duration: 0,
       isPinned: !!options.isPinned,
@@ -398,6 +400,7 @@ class VeloxPlayer {
     this.addToPlaylist(filePath, fileName, mediaType);
     this.sortAndRenderTabs();
     this.activateTab(tabId);
+    return newTab;
   }
 
   togglePinTab(tabId, e) {
@@ -522,10 +525,19 @@ class VeloxPlayer {
     this.videoEl.pause();
     this.audioEl.pause();
 
-    // Use direct file:/// URL so media is strictly same-origin with file:/// index.html.
-    // This allows MediaElementAudioSource (Equalizer, 200% Volume Boost, Visualizer) and native audio to play without CORS blocks.
-    const fileUrl = tab.path.startsWith('file://') ? tab.path : `file:///${tab.path.replace(/\\/g, '/')}`;
-    const streamUrl = fileUrl;
+    // Destroy any existing HLS instance
+    if (this.hlsInstance) {
+      try {
+        this.hlsInstance.destroy();
+      } catch (e) {}
+      this.hlsInstance = null;
+    }
+
+    // Determine stream or file URL
+    let streamUrl = tab.path;
+    if (!tab.path.startsWith('http://') && !tab.path.startsWith('https://')) {
+      streamUrl = tab.path.startsWith('file://') ? tab.path : `file:///${tab.path.replace(/\\/g, '/')}`;
+    }
 
     const currentVol = this.volumeSlider ? parseFloat(this.volumeSlider.value || 1) : 1;
 
@@ -534,17 +546,48 @@ class VeloxPlayer {
       this.videoEl.classList.remove('hidden');
       this.imageFilmstrip.classList.add('hidden');
 
-      this.videoEl.src = streamUrl;
       this.videoEl.volume = currentVol;
       this.videoEl.playbackRate = this.speeds[this.currentSpeedIndex];
       this.videoEl.muted = !!tab.isMuted;
+
+      // Handle HLS / M3U8 streaming
+      const isM3u8 = tab.path.toLowerCase().includes('.m3u8') || tab.isLive;
+      if (isM3u8 && typeof Hls !== 'undefined' && Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          backBufferLength: 90
+        });
+        this.hlsInstance = hls;
+        hls.loadSource(streamUrl);
+        hls.attachMedia(this.videoEl);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          this.videoEl.play().catch(() => {});
+        });
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+              default:
+                hls.destroy();
+                break;
+            }
+          }
+        });
+      } else {
+        this.videoEl.src = streamUrl;
+        this.videoEl.play().catch(() => {});
+      }
 
       // Attach VideoFX & DSP
       this.attachVideoFX();
       this.attachAudioDSP(this.videoEl);
       this.attachSubtitles();
-
-      this.videoEl.play().catch(() => {});
     } else if (tab.type === 'audio') {
       this.controlBar.classList.remove('hidden');
       this.audioContainer.classList.remove('hidden');
@@ -627,7 +670,12 @@ class VeloxPlayer {
 
   bindMediaControls() {
     this.btnPlayPause.addEventListener('click', () => this.togglePlayPause());
-    this.videoEl.addEventListener('click', () => this.togglePlayPause());
+    
+    // Double click to pause / play toggle on video element
+    this.videoEl.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      this.togglePlayPause();
+    });
     this.btnStop.addEventListener('click', () => this.stopPlayback());
 
     this.btnPrev.addEventListener('click', () => this.playPrevious());
@@ -749,7 +797,6 @@ class VeloxPlayer {
 
     // Fullscreen
     this.btnFullscreen.addEventListener('click', () => this.toggleFullscreen());
-    this.videoEl.addEventListener('dblclick', () => this.toggleFullscreen());
 
     // Takeover Button Bottom
     this.btnTakeoverBottom.addEventListener('click', () => this.toggleTakeoverMode());
@@ -1620,6 +1667,144 @@ class VeloxPlayer {
       else if (e.key === '0') {
         if (!this.imageContainer.classList.contains('hidden')) {
           this.resetImageState();
+        }
+      }
+      // IPTV Modal Toggle (I)
+      else if (e.key.toLowerCase() === 'i') {
+        const modal = document.getElementById('iptv-modal');
+        if (modal) modal.classList.toggle('hidden');
+      }
+    });
+  }
+
+  // ==========================================================================
+  // IPTV Stream & Playlist Browser Controls
+  // ==========================================================================
+
+  bindIptvControls() {
+    const btnHeaderIptv = document.getElementById('btn-header-iptv');
+    const btnEmptyIptv = document.getElementById('btn-empty-iptv');
+    const iptvModal = document.getElementById('iptv-modal');
+    const btnIptvClose = document.getElementById('btn-iptv-close');
+    const btnPlayUrl = document.getElementById('btn-iptv-play-url');
+    const urlInput = document.getElementById('iptv-url-input');
+    const presetSelect = document.getElementById('iptv-preset-select');
+    const btnLoadPreset = document.getElementById('btn-iptv-load-preset');
+    const searchInput = document.getElementById('iptv-search-input');
+    const channelList = document.getElementById('iptv-channel-list');
+    const statusMsg = document.getElementById('iptv-status-msg');
+
+    const toggleModal = () => {
+      iptvModal?.classList.toggle('hidden');
+      if (iptvModal && !iptvModal.classList.contains('hidden')) {
+        urlInput?.focus();
+      }
+    };
+
+    btnHeaderIptv?.addEventListener('click', toggleModal);
+    btnEmptyIptv?.addEventListener('click', toggleModal);
+    btnIptvClose?.addEventListener('click', () => iptvModal?.classList.add('hidden'));
+
+    const playStream = (url, name) => {
+      if (!url) return;
+      iptvModal?.classList.add('hidden');
+      this.addTab(url.trim(), {
+        title: name || 'Live IPTV',
+        type: 'video',
+        isLive: true
+      });
+      if (window.showVeloxOSD) {
+        window.showVeloxOSD(`IPTV: ${name || 'Live Stream'}`);
+      }
+    };
+
+    btnPlayUrl?.addEventListener('click', () => {
+      const url = urlInput?.value.trim();
+      if (url) playStream(url, 'Live Stream');
+    });
+
+    urlInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const url = urlInput.value.trim();
+        if (url) playStream(url, 'Live Stream');
+      }
+    });
+
+    let currentChannels = [];
+
+    const renderChannels = (filter = '') => {
+      if (!channelList) return;
+      channelList.innerHTML = '';
+      const query = filter.toLowerCase().trim();
+      const filtered = query ? currentChannels.filter(c => c.name.toLowerCase().includes(query)) : currentChannels;
+
+      if (filtered.length === 0) {
+        channelList.innerHTML = '<div style="padding:14px; text-align:center; color:var(--text-muted); font-size:12px;">No matching channels found.</div>';
+        return;
+      }
+
+      // Render top 150 channels to maintain instant responsive rendering
+      filtered.slice(0, 150).forEach(ch => {
+        const item = document.createElement('div');
+        item.className = 'iptv-channel-item';
+        item.innerHTML = `
+          <span class="iptv-channel-name">📺 ${ch.name}</span>
+          ${ch.group ? `<span class="iptv-channel-tag">${ch.group}</span>` : ''}
+        `;
+        item.addEventListener('click', () => playStream(ch.url, ch.name));
+        channelList.appendChild(item);
+      });
+    };
+
+    searchInput?.addEventListener('input', (e) => {
+      renderChannels(e.target.value);
+    });
+
+    btnLoadPreset?.addEventListener('click', async () => {
+      const playlistUrl = presetSelect?.value;
+      if (!playlistUrl) return;
+
+      if (statusMsg) {
+        statusMsg.innerText = '⚡ Fetching channels from iptv-org...';
+        statusMsg.classList.remove('hidden');
+      }
+
+      try {
+        const res = await fetch(playlistUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        const lines = text.split('\n');
+
+        currentChannels = [];
+        let curName = '';
+        let curGroup = '';
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (line.startsWith('#EXTINF:')) {
+            const nameMatch = line.match(/,(.+)$/);
+            curName = nameMatch ? nameMatch[1].trim() : 'Channel';
+            const groupMatch = line.match(/group-title="([^"]+)"/i);
+            curGroup = groupMatch ? groupMatch[1].trim() : '';
+          } else if (line.startsWith('http://') || line.startsWith('https://')) {
+            if (curName) {
+              currentChannels.push({
+                name: curName,
+                url: line,
+                group: curGroup
+              });
+              curName = '';
+              curGroup = '';
+            }
+          }
+        }
+
+        if (statusMsg) statusMsg.classList.add('hidden');
+        renderChannels(searchInput?.value || '');
+      } catch (err) {
+        if (statusMsg) {
+          statusMsg.innerText = `Failed to load playlist: ${err.message}. Please verify internet connection.`;
+          statusMsg.classList.remove('hidden');
         }
       }
     });

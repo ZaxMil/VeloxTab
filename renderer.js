@@ -826,6 +826,36 @@ class VeloxPlayer {
 
     // Takeover Button Bottom
     this.btnTakeoverBottom.addEventListener('click', () => this.toggleTakeoverMode());
+
+    // Mouse Wheel Volume & Fullscreen Gestures
+    this.viewport.addEventListener('wheel', (e) => {
+      // If image viewer is active, image zoom handles wheel
+      if (!this.imageContainer.classList.contains('hidden')) return;
+
+      e.preventDefault();
+      
+      // Ctrl + Wheel: Toggle Full Size / Fullscreen
+      if (e.ctrlKey) {
+        this.toggleFullscreen();
+        return;
+      }
+
+      // Normal Wheel: Volume Up / Volume Down (5% steps)
+      const currentVol = parseFloat(this.volumeSlider.value || 1);
+      const step = e.deltaY < 0 ? 0.05 : -0.05;
+      const newVol = Math.max(0, Math.min(1, Math.round((currentVol + step) * 100) / 100));
+
+      this.volumeSlider.value = newVol;
+      this.videoEl.volume = newVol;
+      this.audioEl.volume = newVol;
+      this.videoEl.muted = false;
+      this.audioEl.muted = false;
+      this.updateVolumeUI(newVol);
+
+      if (window.showVeloxOSD) {
+        window.showVeloxOSD(`Volume: ${Math.round(newVol * 100)}%`);
+      }
+    }, { passive: false });
   }
 
   updateVolumeUI(val) {

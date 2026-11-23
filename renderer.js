@@ -563,18 +563,24 @@ class VeloxPlayer {
         hls.attachMedia(this.videoEl);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           this.videoEl.play().catch(() => {});
+          if (window.showVeloxOSD) window.showVeloxOSD(`Playing Live Stream: ${tab.name}`);
         });
         hls.on(Hls.Events.ERROR, (_event, data) => {
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
+                if (window.showVeloxOSD) window.showVeloxOSD('Network reconnecting...');
                 hls.startLoad();
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
+                if (window.showVeloxOSD) window.showVeloxOSD('Media buffer recovery...');
                 hls.recoverMediaError();
                 break;
               default:
                 hls.destroy();
+                // Fallback to direct HTML5 video src
+                this.videoEl.src = streamUrl;
+                this.videoEl.play().catch(() => {});
                 break;
             }
           }
@@ -584,9 +590,11 @@ class VeloxPlayer {
         this.videoEl.play().catch(() => {});
       }
 
-      // Attach VideoFX & DSP
+      // Attach VideoFX & DSP (only for non-live local files to prevent live stream CORS/MSE stalls)
       this.attachVideoFX();
-      this.attachAudioDSP(this.videoEl);
+      if (!tab.isLive && !tab.path.startsWith('http')) {
+        this.attachAudioDSP(this.videoEl);
+      }
       this.attachSubtitles();
     } else if (tab.type === 'audio') {
       this.controlBar.classList.remove('hidden');
@@ -982,9 +990,11 @@ class VeloxPlayer {
   }
 
   toggleEqualizerModal(forceState) {
-    const isHidden = this.equalizerModal.classList.contains('hidden');
-    const newState = typeof forceState === 'boolean' ? !forceState : isHidden;
-    this.equalizerModal.classList.toggle('hidden', !newState);
+    if (typeof forceState === 'boolean') {
+      this.equalizerModal.classList.toggle('hidden', !forceState);
+    } else {
+      this.equalizerModal.classList.toggle('hidden');
+    }
   }
 
   // ==========================================================================
@@ -1108,9 +1118,11 @@ class VeloxPlayer {
   }
 
   toggleVideoFXModal(forceState) {
-    const isHidden = this.videofxModal.classList.contains('hidden');
-    const newState = typeof forceState === 'boolean' ? !forceState : isHidden;
-    this.videofxModal.classList.toggle('hidden', !newState);
+    if (typeof forceState === 'boolean') {
+      this.videofxModal.classList.toggle('hidden', !forceState);
+    } else {
+      this.videofxModal.classList.toggle('hidden');
+    }
   }
 
   // ==========================================================================
@@ -1192,9 +1204,11 @@ class VeloxPlayer {
   }
 
   toggleSubtitlesPopover(forceState) {
-    const isHidden = this.subtitlesPopover.classList.contains('hidden');
-    const newState = typeof forceState === 'boolean' ? !forceState : isHidden;
-    this.subtitlesPopover.classList.toggle('hidden', !newState);
+    if (typeof forceState === 'boolean') {
+      this.subtitlesPopover.classList.toggle('hidden', !forceState);
+    } else {
+      this.subtitlesPopover.classList.toggle('hidden');
+    }
   }
 
   // ==========================================================================
@@ -1760,9 +1774,27 @@ class VeloxPlayer {
       renderChannels(e.target.value);
     });
 
+    const VERIFIED_PRESETS = [
+      { name: 'Big Buck Bunny (4K/1080p HLS Test)', url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', group: 'Demo/Test' },
+      { name: 'Akamai Live TV Test 24/7', url: 'https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8', group: 'Live Test' },
+      { name: '2GB Live News (1080p)', url: 'https://2gblive.akamaized.net/hls/live/2033805/2GB/index.m3u8', group: 'News' },
+      { name: '3AW Live News (1080p)', url: 'https://3awlive.akamaized.net/hls/live/2032295/3AW/index.m3u8', group: 'News' },
+      { name: '6PR Live Stream (1080p)', url: 'https://6prlive.akamaized.net/hls/live/2033806/6PR/index.m3u8', group: 'News' },
+      { name: 'Tizen International HD', url: 'https://dash2.antik.sk/live/test_one_plus_one_int_tizen/playlist.m3u8', group: 'General' },
+      { name: 'Marathon Live HD', url: 'https://dash2.antik.sk/live/1plus1_marathon/playlist.m3u8', group: 'General' },
+      { name: 'Akamai Eight HLS Live', url: 'https://moctobpltc-i.akamaihd.net/hls/live/571329/eight/playlist.m3u8', group: 'Demo/Test' }
+    ];
+
     btnLoadPreset?.addEventListener('click', async () => {
       const playlistUrl = presetSelect?.value;
       if (!playlistUrl) return;
+
+      if (playlistUrl === 'verified-popular') {
+        currentChannels = [...VERIFIED_PRESETS];
+        if (statusMsg) statusMsg.classList.add('hidden');
+        renderChannels(searchInput?.value || '');
+        return;
+      }
 
       if (statusMsg) {
         statusMsg.innerText = '⚡ Fetching channels from iptv-org...';
@@ -1808,6 +1840,11 @@ class VeloxPlayer {
         }
       }
     });
+
+    // Auto-load verified presets when modal is opened for first time
+    currentChannels = [...VERIFIED_PRESETS];
+    renderChannels('');
+    if (statusMsg) statusMsg.classList.add('hidden');
   }
 
   // Format Time (HH:MM:SS)

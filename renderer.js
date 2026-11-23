@@ -1637,7 +1637,15 @@ class VeloxPlayer {
   }
 }
 
-// Instantiate player on DOM readiness
-window.addEventListener('DOMContentLoaded', () => {
-  new VeloxPlayer();
-});
+// Instantiate player on DOM readiness or immediately if already loaded
+function initVeloxPlayer() {
+  if (!window.__veloxPlayer) {
+    window.__veloxPlayer = new VeloxPlayer();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initVeloxPlayer);
+} else {
+  initVeloxPlayer();
+}

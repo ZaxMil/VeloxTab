@@ -109,7 +109,7 @@ ipcRenderer.on('media-stop', () => {
 function showDefaultSessionRestorePrompt(sessionData) {
   if (!sessionData || !Array.isArray(sessionData.tabs) || sessionData.tabs.length === 0) return;
 
-  window.addEventListener('DOMContentLoaded', () => {
+  const triggerBanner = () => {
     setTimeout(() => {
       // If user already opened media or dismissed, do nothing
       if (document.getElementById('velox-restore-banner')) return;
@@ -178,9 +178,7 @@ function showDefaultSessionRestorePrompt(sessionData) {
           } else {
             // Emulate drag-drop or file loading
             filePaths.forEach(p => {
-              if (window.veloxPlayer && typeof window.veloxPlayer.addTab === 'function') {
-                window.veloxPlayer.addTab(p);
-              }
+              if (window.__veloxPlayer) window.__veloxPlayer.addTab(p);
             });
           }
         }
@@ -188,10 +186,16 @@ function showDefaultSessionRestorePrompt(sessionData) {
 
       document.getElementById('btn-banner-dismiss')?.addEventListener('click', () => {
         banner.remove();
-        ipcRenderer.invoke('clear-saved-session');
+        ipcRenderer.invoke('clear-saved-session').catch(() => {});
       });
-    }, 400);
-  });
+    }, 500);
+  };
+
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', triggerBanner);
+  } else {
+    triggerBanner();
+  }
 }
 
 // Auto-save session on page unload
